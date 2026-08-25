@@ -98,10 +98,9 @@ function buildCardEl(company, { collapsedByDefault = true } = {}) {
 function openInfoModal(company) {
   cardModalContent.innerHTML = '';
   const card = buildCardEl(company, { collapsedByDefault: false });
-  card.style.position = 'relative';
-  card.style.height = 'min(520px, 68svh)';
+  card.classList.add('swipe-card--static');
   cardModalContent.appendChild(card);
-  cardModalContent.appendChild(el('button', { class: 'btn btn--block', text: 'Закрыть', onClick: closeCardModal }));
+  cardModalContent.appendChild(el('button', { class: 'btn btn--block', text: 'Закрыть', onClick: closeCardModal, style: 'margin-top: 16px;' }));
   cardModal.classList.add('is-open');
 }
 
@@ -256,8 +255,7 @@ function openInvitationCard(row) {
   cardModalContent.innerHTML = '';
   const company = { ...row, id: row.company_id };
   const card = buildCardEl(company, { collapsedByDefault: false });
-  card.style.position = 'relative';
-  card.style.height = 'min(480px, 60svh)';
+  card.classList.add('swipe-card--static');
   cardModalContent.appendChild(card);
 
   if (row.status === 'declined') {
