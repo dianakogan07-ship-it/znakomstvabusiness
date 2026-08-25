@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Деловые знакомства форума</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="app-header">
+      <div>
+        <div class="brand">Деловой <span>форум</span></div>
+        <div class="company-name" id="myCompanyName"></div>
+      </div>
+      <button class="icon-btn" id="logoutBtn" title="Выйти">Выйти</button>
+    </header>
+
+    <main class="app-main">
+      <!-- Лента -->
+      <section class="view is-active" id="view-feed">
+        <div class="stack" id="feedStack"></div>
+        <div class="swipe-actions" id="feedActions" style="display:none">
+          <button class="round-btn round-btn--nope" id="feedNope" title="Неинтересно">✕</button>
+          <button class="round-btn round-btn--like" id="feedLike" title="Хочу пообщаться">♥</button>
+        </div>
+      </section>
+
+      <!-- Приглашения -->
+      <section class="view" id="view-invitations">
+        <h2 style="margin-bottom:14px;">Приглашения</h2>
+        <div id="invitationsList"></div>
+      </section>
+
+      <!-- Диалоги -->
+      <section class="view" id="view-dialogs">
+        <h2 style="margin-bottom:14px;">Диалоги</h2>
+        <div id="dialogsList"></div>
+      </section>
+
+      <!-- Чат -->
+      <section class="view" id="view-chat">
+        <div class="chat-view">
+          <div class="chat-header">
+            <button class="icon-btn" id="chatBack">← Назад</button>
+            <img class="chat-header__avatar" id="chatAvatar" alt="" />
+            <div>
+              <div style="font-weight:600; font-size:14px;" id="chatName"></div>
+              <div style="font-size:12px; color:var(--text-dim);" id="chatContact"></div>
+            </div>
+          </div>
+          <div class="chat-messages" id="chatMessages"></div>
+          <div class="chat-input-row">
+            <textarea id="chatInput" placeholder="Сообщение…"></textarea>
+            <button class="btn btn--primary" id="chatSend">Отправить</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <nav class="tabbar" id="tabbar">
+      <button class="tabbar__item is-active" data-tab="feed">
+        <span class="tabbar__icon">🔥</span>Лента
+      </button>
+      <button class="tabbar__item" data-tab="invitations">
+        <span class="tabbar__icon">📥</span>Приглашения
+        <span class="badge" id="invitationsBadge" hidden>0</span>
+      </button>
+      <button class="tabbar__item" data-tab="dialogs">
+        <span class="tabbar__icon">💬</span>Диалоги
+      </button>
+    </nav>
+  </div>
+
+  <!-- Попап карточки из приглашений -->
+  <div class="modal-overlay" id="cardModal">
+    <div class="modal-sheet" id="cardModalContent"></div>
+  </div>
+
+  <!-- Оверлей мэтча -->
+  <div class="match-overlay" id="matchOverlay">
+    <div>
+      <div class="match-avatars">
+        <img id="matchAvatarMe" alt="" />
+        <img id="matchAvatarThem" alt="" />
+      </div>
+      <h2>Это мэтч!</h2>
+      <p id="matchText"></p>
+      <button class="btn btn--primary" id="matchGoToChat">Написать сообщение</button>
+      <div style="margin-top:10px;">
+        <button class="btn btn--ghost" id="matchContinue">Продолжить смотреть ленту</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

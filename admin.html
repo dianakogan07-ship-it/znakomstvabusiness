@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Админ-панель — деловые знакомства форума</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- Экран входа админа -->
+  <div class="auth-page" id="adminLoginScreen">
+    <div class="auth-box card-surface">
+      <div class="brand">Деловой форум</div>
+      <h1>Вход организатора</h1>
+      <p class="sub">Единый пароль администратора</p>
+
+      <div class="auth-error" id="adminLoginError"></div>
+
+      <form id="adminLoginForm">
+        <div class="field">
+          <label for="adminPassword">Пароль</label>
+          <input id="adminPassword" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn--primary btn--block" type="submit" id="adminLoginBtn">Войти</button>
+      </form>
+
+      <div class="auth-footer-link">
+        <a href="index.html">← Вход для компаний</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Панель администратора -->
+  <div class="admin-shell" id="adminPanel" hidden>
+    <div class="admin-header">
+      <h1>Компании-участники</h1>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" id="adminLogoutBtn">Выйти</button>
+        <button class="btn btn--primary" id="openAddFormBtn">+ Добавить компанию</button>
+      </div>
+    </div>
+
+    <div id="newCredentialsPanel"></div>
+
+    <div class="admin-table-wrap card-surface" style="padding: 6px;">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Компания</th>
+            <th>Сфера</th>
+            <th>Контакт</th>
+            <th>Доступ</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="companiesTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Форма добавления/редактирования -->
+  <div class="modal-overlay" id="companyFormModal">
+    <div class="modal-sheet" style="max-width:640px;">
+      <h3 id="companyFormTitle" style="margin-bottom:16px;">Добавить компанию</h3>
+      <form id="companyForm">
+        <input type="hidden" id="companyId" />
+        <div class="form-grid">
+          <div class="field field--full">
+            <label>Название компании</label>
+            <input id="f_name" required />
+          </div>
+          <div class="field field--full">
+            <label>Ссылка на фото (URL)</label>
+            <input id="f_photo_url" type="url" placeholder="https://…" />
+          </div>
+          <div class="field">
+            <label>Сфера деятельности</label>
+            <input id="f_industry" />
+          </div>
+          <div class="field">
+            <label>Имя контактного лица</label>
+            <input id="f_contact_first_name" />
+          </div>
+          <div class="field field--full">
+            <label>Чем занимается</label>
+            <textarea id="f_description" rows="2"></textarea>
+          </div>
+          <div class="field field--full">
+            <label>Что предлагает</label>
+            <textarea id="f_offer" rows="2"></textarea>
+          </div>
+          <div class="field field--full">
+            <label>Что интересно обсудить</label>
+            <textarea id="f_discuss_topics" rows="2"></textarea>
+          </div>
+          <div class="field">
+            <label>Логин</label>
+            <input id="f_username" required />
+          </div>
+          <div class="field">
+            <label>Пароль <span id="passwordHint" style="color:var(--text-faint); font-weight:400;"></span></label>
+            <div style="display:flex; gap:6px;">
+              <input id="f_password" autocomplete="new-password" />
+              <button type="button" class="btn btn--sm" id="genPasswordBtn">Сгенерировать</button>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px; justify-content:flex-end;">
+          <button type="button" class="btn" id="cancelFormBtn">Отмена</button>
+          <button type="submit" class="btn btn--primary" id="saveCompanyBtn">Сохранить</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

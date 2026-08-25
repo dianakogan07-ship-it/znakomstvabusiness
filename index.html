@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Деловые знакомства форума — вход</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="auth-page">
+    <div class="auth-box card-surface">
+      <div class="brand">Деловой форум</div>
+      <h1>Вход для компании</h1>
+      <p class="sub">Введите логин и пароль, которые выдал организатор</p>
+
+      <div class="auth-error" id="loginError"></div>
+
+      <form id="loginForm">
+        <div class="field">
+          <label for="username">Логин</label>
+          <input id="username" name="username" type="text" autocomplete="username" required />
+        </div>
+        <div class="field">
+          <label for="password">Пароль</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </div>
+        <button class="btn btn--primary btn--block" type="submit" id="loginBtn">Войти</button>
+      </form>
+
+      <div class="auth-footer-link">
+        <a href="admin.html">Я организатор форума →</a>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>
