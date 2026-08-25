@@ -412,6 +412,11 @@ begin
 end;
 $$;
 
+-- Postgres не позволяет "create or replace" менять набор возвращаемых
+-- столбцов функции — удаляем прежнюю версию перед пересозданием, чтобы
+-- этот файл можно было безопасно выполнять повторно.
+drop function if exists get_matches(text);
+
 create or replace function get_matches(p_token text)
 returns table (
   company_id uuid, name text, photo_url text, contact_first_name text,
