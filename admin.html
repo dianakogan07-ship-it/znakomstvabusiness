@@ -4,13 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Админ-панель — деловые знакомства форума</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <!-- Экран входа админа -->
   <div class="auth-page" id="adminLoginScreen">
     <div class="auth-box card-surface">
-      <div class="brand">Деловой форум</div>
+      <div class="event-logo">
+        <div class="event-logo__eyebrow"><span>Форум</span><span>13 августа&nbsp;&nbsp;Кронштадт</span></div>
+        <div class="event-logo__title">Стройтех’26</div>
+      </div>
       <h1>Вход организатора</h1>
       <p class="sub">Единый пароль администратора</p>
 
@@ -33,7 +39,13 @@
   <!-- Панель администратора -->
   <div class="admin-shell" id="adminPanel" hidden>
     <div class="admin-header">
-      <h1>Компании-участники</h1>
+      <div>
+        <div class="event-logo">
+          <div class="event-logo__eyebrow"><span>Форум</span><span>13 августа&nbsp;&nbsp;Кронштадт</span></div>
+          <div class="event-logo__title">Стройтех’26</div>
+        </div>
+        <h1>Компании-участники</h1>
+      </div>
       <div style="display:flex; gap:10px;">
         <button class="btn" id="adminLogoutBtn">Выйти</button>
         <button class="btn btn--primary" id="openAddFormBtn">+ Добавить компанию</button>
