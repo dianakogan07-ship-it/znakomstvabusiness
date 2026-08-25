@@ -289,6 +289,21 @@ async function decideOnInvitation(company, direction) {
 
 /* ---------------------------- Dialogs ---------------------------- */
 const dialogsList = document.getElementById('dialogsList');
+const dialogsBadge = document.getElementById('dialogsBadge');
+const tabDialogsBadge = document.querySelector('[data-tab="dialogs"] .badge');
+
+async function refreshDialogsBadge() {
+  try {
+    const count = await call('get_dialogs_count', { p_token: session.token });
+    [dialogsBadge, tabDialogsBadge].forEach((b) => {
+      if (!b) return;
+      b.textContent = String(count);
+      b.hidden = !count;
+    });
+  } catch (err) {
+    handleAuthError(err);
+  }
+}
 
 async function loadDialogs() {
   dialogsList.innerHTML = '';
@@ -311,7 +326,10 @@ async function loadDialogs() {
     const item = el('div', { class: 'list-item' }, [
       el('img', { class: 'list-item__avatar', src: row.photo_url || fallbackAvatar(row.name), alt: '' }),
       el('div', { class: 'list-item__main' }, [
-        el('div', { class: 'list-item__title', text: row.name }),
+        el('div', { class: 'list-item__title' }, [
+          row.name,
+          row.is_unread ? el('span', { class: 'pill pill--new', text: 'Новое' }) : null,
+        ]),
         el('div', { class: 'list-item__subtitle', text: row.last_message || `Контакт: ${row.contact_first_name || ''}` }),
       ]),
       el('div', { class: 'list-item__time', text: timeAgo(row.last_message_at || row.matched_at) }),
@@ -319,6 +337,7 @@ async function loadDialogs() {
     item.addEventListener('click', () => openChat(row));
     dialogsList.appendChild(item);
   });
+  refreshDialogsBadge();
 }
 
 /* ---------------------------- Chat ---------------------------- */
@@ -333,6 +352,12 @@ async function openChat(company) {
   document.getElementById('chatContact').textContent = chatOther.contact_first_name ? `Контакт: ${chatOther.contact_first_name}` : '';
   showView('chat');
   await loadMessages();
+  try {
+    await call('mark_dialog_read', { p_token: session.token, p_other_company_id: chatOther.id });
+    refreshDialogsBadge();
+  } catch (err) {
+    handleAuthError(err);
+  }
 }
 
 document.getElementById('chatBack').addEventListener('click', () => showView('dialogs'));
@@ -379,7 +404,9 @@ chatInput.addEventListener('keydown', (e) => {
 /* ---------------------------- Init ---------------------------- */
 loadFeed();
 refreshInvitationsBadge();
+refreshDialogsBadge();
 setInterval(refreshInvitationsBadge, 20000);
+setInterval(refreshDialogsBadge, 20000);
 setInterval(() => {
   if (views.dialogs.classList.contains('is-active')) loadDialogs();
   if (views.chat.classList.contains('is-active') && chatOther) loadMessages();

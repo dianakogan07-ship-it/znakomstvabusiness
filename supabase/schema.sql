@@ -113,6 +113,16 @@ create table if not exists admin_sessions (
   expires_at   timestamptz not null default now() + interval '30 days'
 );
 
+-- Отметка «прочитано» для диалогов: когда компания последний раз открывала
+-- переписку с конкретным собеседником. Отсутствие строки = диалог ещё ни
+-- разу не открывали (значит это «новый доступный диалог» для бейджа).
+create table if not exists dialog_reads (
+  company_id         uuid not null references companies(id) on delete cascade,
+  other_company_id   uuid not null references companies(id) on delete cascade,
+  last_read_at       timestamptz not null default now(),
+  primary key (company_id, other_company_id)
+);
+
 -- Запрещаем прямой доступ к таблицам через REST/anon-ключ: RLS включён,
 -- разрешающих политик нет → доступ только через SECURITY DEFINER функции.
 alter table companies enable row level security;
@@ -120,8 +130,9 @@ alter table swipes enable row level security;
 alter table messages enable row level security;
 alter table company_sessions enable row level security;
 alter table admin_sessions enable row level security;
+alter table dialog_reads enable row level security;
 
-revoke all on companies, swipes, messages, company_sessions, admin_sessions
+revoke all on companies, swipes, messages, company_sessions, admin_sessions, dialog_reads
   from anon, authenticated;
 
 -- ----------------------------------------------------------------------------
@@ -404,7 +415,7 @@ $$;
 create or replace function get_matches(p_token text)
 returns table (
   company_id uuid, name text, photo_url text, contact_first_name text,
-  last_message text, last_message_at timestamptz, matched_at timestamptz
+  last_message text, last_message_at timestamptz, matched_at timestamptz, is_unread boolean
 )
 language plpgsql security definer set search_path = public, extensions as $$
 declare
@@ -420,7 +431,19 @@ begin
         and _is_matched(v_me, s1.to_company_id)
     )
     select c.id, c.name, c.photo_url, c.contact_first_name,
-           m.body as last_message, m.created_at as last_message_at, mm.matched_at
+           m.body as last_message, m.created_at as last_message_at, mm.matched_at,
+           (
+             dr.last_read_at is null
+             or exists (
+               select 1 from messages msg2
+               where msg2.sender_company_id = mm.other_id
+                 and (
+                   (msg2.company_1 = v_me and msg2.company_2 = mm.other_id)
+                   or (msg2.company_1 = mm.other_id and msg2.company_2 = v_me)
+                 )
+                 and msg2.created_at > dr.last_read_at
+             )
+           ) as is_unread
     from my_matches mm
     join companies c on c.id = mm.other_id
     left join lateral (
@@ -431,7 +454,41 @@ begin
       order by msg.created_at desc
       limit 1
     ) m on true
+    left join dialog_reads dr on dr.company_id = v_me and dr.other_company_id = mm.other_id
     order by coalesce(m.created_at, mm.matched_at) desc;
+end;
+$$;
+
+create or replace function mark_dialog_read(p_token text, p_other_company_id uuid) returns void
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  v_me uuid;
+begin
+  v_me := _current_company(p_token);
+
+  if not _is_matched(v_me, p_other_company_id) then
+    raise exception 'not_matched';
+  end if;
+
+  insert into dialog_reads (company_id, other_company_id, last_read_at)
+  values (v_me, p_other_company_id, now())
+  on conflict (company_id, other_company_id) do update set last_read_at = excluded.last_read_at;
+end;
+$$;
+
+create or replace function get_dialogs_count(p_token text) returns int
+language plpgsql security definer set search_path = public, extensions as $$
+declare
+  v_me uuid;
+  v_count int;
+begin
+  v_me := _current_company(p_token);
+
+  select count(*) into v_count
+  from get_matches(p_token)
+  where is_unread;
+
+  return v_count;
 end;
 $$;
 
@@ -513,6 +570,8 @@ grant execute on function get_matches(text) to anon, authenticated;
 grant execute on function get_messages(text, uuid) to anon, authenticated;
 grant execute on function send_message(text, uuid, text) to anon, authenticated;
 grant execute on function get_invitations_count(text) to anon, authenticated;
+grant execute on function mark_dialog_read(text, uuid) to anon, authenticated;
+grant execute on function get_dialogs_count(text) to anon, authenticated;
 
 -- Служебные (_current_company, _require_admin, _is_matched, _enc_key,
 -- _admin_password) выполняются только изнутри других SECURITY DEFINER
