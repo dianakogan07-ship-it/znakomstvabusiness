@@ -7,6 +7,34 @@ export function generatePassword(length = 10) {
   return out;
 }
 
+const TRANSLIT_MAP = {
+  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z',
+  и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r',
+  с: 's', т: 't', у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch',
+  ъ: '', ы: 'y', ь: '', э: 'e', ю: 'yu', я: 'ya',
+};
+
+// Юридические формы отбрасываем — они не помогают отличить один логин от
+// другого и только удлиняют его (ООО «Ромашка» и АО «Ромашка» иначе дадут
+// один и тот же логин с точностью до этих букв).
+const LEGAL_FORM_WORDS = /^(ооо|зао|оао|пао|ао|ип|нко|тоо)$/i;
+
+export function generateUsernameFromName(name, maxLength = 18) {
+  const words = (name || '')
+    .toLowerCase()
+    .replace(/["«»']/g, ' ')
+    .split(/[^a-zа-яё0-9]+/i)
+    .filter((w) => w && !LEGAL_FORM_WORDS.test(w));
+
+  const translit = words
+    .join('')
+    .split('')
+    .map((ch) => (ch in TRANSLIT_MAP ? TRANSLIT_MAP[ch] : /[a-z0-9]/.test(ch) ? ch : ''))
+    .join('');
+
+  return translit.slice(0, maxLength) || 'company';
+}
+
 export async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);

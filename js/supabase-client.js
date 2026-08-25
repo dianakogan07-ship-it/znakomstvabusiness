@@ -26,7 +26,11 @@ const MESSAGES = {
 
 function friendlyMessage(rawMessage) {
   const code = (rawMessage || '').split(':')[0].trim();
-  return MESSAGES[code] || 'Что-то пошло не так. Попробуйте ещё раз.';
+  if (MESSAGES[code]) return MESSAGES[code];
+  if (/companies_username_key/.test(rawMessage || '')) {
+    return 'Такой логин уже занят — измените его и попробуйте снова';
+  }
+  return 'Что-то пошло не так. Попробуйте ещё раз.';
 }
 
 export async function call(fn, args = {}) {

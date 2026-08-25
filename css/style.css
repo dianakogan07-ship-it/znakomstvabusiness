@@ -41,7 +41,7 @@ h1, h2, h3 { margin: 0; font-weight: 700; letter-spacing: -0.01em; }
 
 button { font-family: inherit; }
 
-input, textarea {
+input, textarea, select {
   font-family: inherit;
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -51,8 +51,10 @@ input, textarea {
   font-size: 15px;
   width: 100%;
 }
+select { appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 8l5 5 5-5' stroke='%2397a1bd' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 36px; }
+select:invalid { color: var(--text-faint); }
 input::placeholder, textarea::placeholder { color: var(--text-faint); }
-input:focus, textarea:focus {
+input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);

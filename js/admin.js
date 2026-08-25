@@ -1,5 +1,5 @@
 import { call, ApiError } from './supabase-client.js';
-import { saveAdminSession, getAdminSession, clearAdminSession, copyToClipboard, showToast, el, generatePassword, fallbackAvatar } from './utils.js';
+import { saveAdminSession, getAdminSession, clearAdminSession, copyToClipboard, showToast, el, generatePassword, generateUsernameFromName, fallbackAvatar } from './utils.js';
 
 const loginScreen = document.getElementById('adminLoginScreen');
 const panel = document.getElementById('adminPanel');
@@ -150,7 +150,14 @@ function openForm(company = null) {
   document.getElementById('companyId').value = company?.id || '';
   document.getElementById('f_name').value = company?.name || '';
   document.getElementById('f_photo_url').value = company?.photo_url || '';
-  document.getElementById('f_industry').value = company?.industry || '';
+
+  const industrySelect = document.getElementById('f_industry');
+  industrySelect.querySelectorAll('option[data-custom]').forEach((o) => o.remove());
+  if (company?.industry && ![...industrySelect.options].some((o) => o.value === company.industry)) {
+    industrySelect.appendChild(el('option', { value: company.industry, text: company.industry, 'data-custom': '1' }));
+  }
+  industrySelect.value = company?.industry || '';
+
   document.getElementById('f_contact_first_name').value = company?.contact_first_name || '';
   document.getElementById('f_description').value = company?.description || '';
   document.getElementById('f_offer').value = company?.offer || '';
@@ -173,6 +180,11 @@ document.getElementById('cancelFormBtn').addEventListener('click', closeForm);
 formModal.addEventListener('click', (e) => { if (e.target === formModal) closeForm(); });
 document.getElementById('genPasswordBtn').addEventListener('click', () => {
   document.getElementById('f_password').value = generatePassword();
+
+  const usernameField = document.getElementById('f_username');
+  if (!usernameField.value.trim()) {
+    usernameField.value = generateUsernameFromName(document.getElementById('f_name').value);
+  }
 });
 
 companyForm.addEventListener('submit', async (e) => {
