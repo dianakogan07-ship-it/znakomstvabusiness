@@ -143,7 +143,7 @@ $$;
 -- ----------------------------------------------------------------------------
 
 create or replace function _current_company(p_token text) returns uuid
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_company_id uuid;
 begin
@@ -164,7 +164,7 @@ end;
 $$;
 
 create or replace function _require_admin(p_token text) returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   if p_token is null or not exists (
     select 1 from admin_sessions where token = p_token and expires_at > now()
@@ -175,7 +175,7 @@ end;
 $$;
 
 create or replace function _is_matched(p_a uuid, p_b uuid) returns boolean
-language sql stable security definer set search_path = public as $$
+language sql stable security definer set search_path = public, extensions as $$
   select exists (
     select 1 from swipes s1
     where s1.from_company_id = p_a and s1.to_company_id = p_b and s1.direction = 'right'
@@ -190,7 +190,7 @@ $$;
 -- ----------------------------------------------------------------------------
 
 create or replace function admin_login(p_password text) returns text
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_token text;
 begin
@@ -214,7 +214,7 @@ returns table (
   offer text, discuss_topics text, contact_first_name text,
   username text, password text, created_at timestamptz
 )
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   perform _require_admin(p_admin_token);
 
@@ -233,7 +233,7 @@ create or replace function admin_create_company(
   p_description text, p_offer text, p_discuss_topics text,
   p_contact_first_name text, p_username text, p_password text
 ) returns table (id uuid, username text, password text)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_id uuid;
 begin
@@ -263,7 +263,7 @@ create or replace function admin_update_company(
   p_industry text, p_description text, p_offer text, p_discuss_topics text,
   p_contact_first_name text, p_username text, p_new_password text default null
 ) returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   perform _require_admin(p_admin_token);
 
@@ -286,7 +286,7 @@ end;
 $$;
 
 create or replace function admin_delete_company(p_admin_token text, p_company_id uuid) returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 begin
   perform _require_admin(p_admin_token);
   delete from companies where id = p_company_id;
@@ -302,7 +302,7 @@ returns table (
   token text, id uuid, name text, photo_url text, industry text,
   description text, offer text, discuss_topics text, contact_first_name text
 )
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_row companies%rowtype;
   v_token text;
@@ -330,7 +330,7 @@ returns table (
   id uuid, name text, photo_url text, industry text, description text,
   offer text, discuss_topics text, contact_first_name text
 )
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_me uuid;
 begin
@@ -350,7 +350,7 @@ $$;
 
 create or replace function record_swipe(p_token text, p_to_company_id uuid, p_direction text)
 returns boolean
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_me uuid;
   v_is_match boolean;
@@ -380,7 +380,7 @@ returns table (
   company_id uuid, name text, photo_url text, industry text, description text,
   offer text, discuss_topics text, contact_first_name text, status text, received_at timestamptz
 )
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_me uuid;
 begin
@@ -406,7 +406,7 @@ returns table (
   company_id uuid, name text, photo_url text, contact_first_name text,
   last_message text, last_message_at timestamptz, matched_at timestamptz
 )
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_me uuid;
 begin
@@ -437,7 +437,7 @@ $$;
 
 create or replace function get_messages(p_token text, p_other_company_id uuid)
 returns table (sender_company_id uuid, body text, created_at timestamptz)
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_me uuid;
 begin
@@ -458,7 +458,7 @@ $$;
 
 create or replace function send_message(p_token text, p_other_company_id uuid, p_body text)
 returns void
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_me uuid;
 begin
@@ -478,7 +478,7 @@ end;
 $$;
 
 create or replace function get_invitations_count(p_token text) returns int
-language plpgsql security definer set search_path = public as $$
+language plpgsql security definer set search_path = public, extensions as $$
 declare
   v_me uuid;
   v_count int;
