@@ -130,12 +130,12 @@ revoke all on companies, swipes, messages, company_sessions, admin_sessions
 
 create or replace function _enc_key() returns text
 language sql immutable as $$
-  select 'bsaH21cj3BWu4zAsk57DbLvrgp7l'::text;
+  select 'CHANGE_ME_RANDOM_ENCRYPTION_KEY_123'::text;
 $$;
 
 create or replace function _admin_password() returns text
 language sql immutable as $$
-  select 'businessswiping'::text;
+  select 'CHANGE_ME_ADMIN_PASSWORD'::text;
 $$;
 
 -- ----------------------------------------------------------------------------
