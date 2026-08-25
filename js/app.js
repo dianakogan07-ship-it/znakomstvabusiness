@@ -51,9 +51,9 @@ tabbar.addEventListener('click', (e) => {
 
 /* ---------------------------- Card rendering helper ---------------------------- */
 function buildCardBody(company) {
-  const body = el('div', { class: 'swipe-card__body' }, [
-    el('div', { class: 'swipe-card__name', text: company.name }),
-    company.industry ? el('div', { class: 'swipe-card__industry', text: company.industry }) : null,
+  const hasMore = Boolean(company.description || company.offer || company.contact_first_name);
+
+  const more = el('div', { class: 'swipe-card__more' }, [
     company.description ? el('div', { class: 'swipe-card__section' }, [
       el('div', { class: 'swipe-card__section-title', text: 'Чем занимается' }),
       el('div', { class: 'swipe-card__section-text', text: company.description }),
@@ -62,11 +62,18 @@ function buildCardBody(company) {
       el('div', { class: 'swipe-card__section-title', text: 'Что предлагает' }),
       el('div', { class: 'swipe-card__section-text', text: company.offer }),
     ]) : null,
+    company.contact_first_name ? el('div', { class: 'swipe-card__contact', text: `Контакт: ${company.contact_first_name}` }) : null,
+  ]);
+
+  const body = el('div', { class: 'swipe-card__body' }, [
+    el('div', { class: 'swipe-card__name', text: company.name }),
+    company.industry ? el('div', { class: 'swipe-card__industry', text: company.industry }) : null,
     company.discuss_topics ? el('div', { class: 'swipe-card__section' }, [
       el('div', { class: 'swipe-card__section-title', text: 'Что интересно обсудить' }),
       el('div', { class: 'swipe-card__section-text', text: company.discuss_topics }),
     ]) : null,
-    company.contact_first_name ? el('div', { class: 'swipe-card__contact', text: `Контакт: ${company.contact_first_name}` }) : null,
+    more,
+    hasMore ? el('div', { class: 'swipe-card__hint', text: 'Нажмите на карточку, чтобы узнать больше →' }) : null,
   ]);
   return body;
 }
@@ -82,10 +89,20 @@ function buildCardEl(company, { collapsedByDefault = true } = {}) {
   if (collapsedByDefault) {
     card.addEventListener('click', (e) => {
       if (e.target.closest('.round-btn')) return;
-      card.classList.toggle('swipe-card--collapsed');
+      openInfoModal(company);
     });
   }
   return card;
+}
+
+function openInfoModal(company) {
+  cardModalContent.innerHTML = '';
+  const card = buildCardEl(company, { collapsedByDefault: false });
+  card.style.position = 'relative';
+  card.style.height = 'min(520px, 68svh)';
+  cardModalContent.appendChild(card);
+  cardModalContent.appendChild(el('button', { class: 'btn btn--block', text: 'Закрыть', onClick: closeCardModal }));
+  cardModal.classList.add('is-open');
 }
 
 /* ---------------------------- Feed ---------------------------- */

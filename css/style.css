@@ -238,8 +238,10 @@ input:focus, textarea:focus {
 .swipe-card__section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-faint); margin-bottom: 4px; }
 .swipe-card__section-text { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
 .swipe-card__contact { font-size: 13px; color: var(--text-dim); margin-top: 10px; }
-.swipe-card--collapsed .swipe-card__body { max-height: 60px; overflow: hidden; }
-.swipe-card__hint { text-align: center; font-size: 12px; color: var(--text-faint); padding: 6px 0 0; }
+.swipe-card__more { display: flex; flex-direction: column; gap: 12px; }
+.swipe-card--collapsed .swipe-card__more { display: none; }
+.swipe-card__hint { display: none; text-align: center; font-size: 12px; color: var(--text-faint); padding: 6px 0 0; }
+.swipe-card--collapsed .swipe-card__hint { display: block; }
 
 .swipe-badge {
   position: absolute;
