@@ -184,8 +184,7 @@ input:focus, textarea:focus, select:focus {
   position: fixed;
   bottom: 0; left: 0; right: 0;
   display: flex;
-  background: rgba(13, 19, 38, 0.95);
-  backdrop-filter: blur(12px);
+  background: rgb(13, 19, 38);
   border-top: 1px solid var(--border);
   z-index: 30;
   padding-bottom: env(safe-area-inset-bottom, 0);
@@ -196,7 +195,7 @@ input:focus, textarea:focus, select:focus {
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  padding: 10px 0 8px;
+  padding: 16px 0 8px;
   background: none;
   border: none;
   color: var(--text-faint);
