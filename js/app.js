@@ -22,6 +22,21 @@ function handleAuthError(err) {
   return false;
 }
 
+/* Лента должна помещаться на экране без скролла: реальную высоту шапки
+   и нижнего меню подставляем в CSS-переменные, вместо того чтобы
+   угадывать её в svh — так карточка и кнопки точно не вылезут за край
+   экрана ни на одном устройстве. */
+function syncLayoutHeights() {
+  const header = document.querySelector('.app-header');
+  const tabbarEl = document.getElementById('tabbar');
+  if (header) document.documentElement.style.setProperty('--header-h', `${header.offsetHeight}px`);
+  if (tabbarEl) document.documentElement.style.setProperty('--tabbar-h', `${tabbarEl.offsetHeight}px`);
+}
+syncLayoutHeights();
+window.addEventListener('resize', syncLayoutHeights);
+window.addEventListener('orientationchange', syncLayoutHeights);
+if (document.fonts?.ready) document.fonts.ready.then(syncLayoutHeights);
+
 /* ---------------------------- Tabs ---------------------------- */
 const tabbar = document.getElementById('tabbar');
 const views = {
@@ -50,9 +65,21 @@ tabbar.addEventListener('click', (e) => {
 });
 
 /* ---------------------------- Card rendering helper ---------------------------- */
-function buildCardBody(company) {
-  const hasMore = Boolean(company.description || company.offer || company.contact_first_name);
+function buildCardMedia(company) {
+  const img = el('img', { class: 'swipe-card__photo', src: company.photo_url || fallbackAvatar(company.name), alt: company.name });
+  img.onerror = () => { img.src = fallbackAvatar(company.name); };
 
+  return el('div', { class: 'swipe-card__media' }, [
+    img,
+    el('div', { class: 'swipe-card__scrim' }),
+    el('div', { class: 'swipe-card__media-overlay' }, [
+      el('span', { class: 'swipe-card__name-overlay', text: company.name }),
+      company.industry ? el('span', { class: 'swipe-card__industry-pill', text: company.industry }) : null,
+    ]),
+  ]);
+}
+
+function buildCardBody(company) {
   const more = el('div', { class: 'swipe-card__more' }, [
     company.description ? el('div', { class: 'swipe-card__section' }, [
       el('div', { class: 'swipe-card__section-title', text: 'Чем занимается' }),
@@ -65,25 +92,24 @@ function buildCardBody(company) {
     company.contact_first_name ? el('div', { class: 'swipe-card__contact', text: `Контакт: ${company.contact_first_name}` }) : null,
   ]);
 
-  const body = el('div', { class: 'swipe-card__body' }, [
-    el('div', { class: 'swipe-card__name', text: company.name }),
-    company.industry ? el('div', { class: 'swipe-card__industry', text: company.industry }) : null,
+  return el('div', { class: 'swipe-card__body' }, [
     company.discuss_topics ? el('div', { class: 'swipe-card__section' }, [
       el('div', { class: 'swipe-card__section-title', text: 'Что интересно обсудить' }),
       el('div', { class: 'swipe-card__section-text', text: company.discuss_topics }),
     ]) : null,
     more,
-    hasMore ? el('div', { class: 'swipe-card__hint', text: 'Нажмите на карточку, чтобы узнать больше →' }) : null,
   ]);
-  return body;
 }
+
+const MORE_TOGGLE_ICON = '<svg viewBox="0 0 20 20" fill="none"><path d="M6 4l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 function buildCardEl(company, { collapsedByDefault = true } = {}) {
   const card = el('div', { class: `swipe-card${collapsedByDefault ? ' swipe-card--collapsed' : ''}` });
-  const img = el('img', { class: 'swipe-card__photo', src: company.photo_url || fallbackAvatar(company.name), alt: company.name });
-  img.onerror = () => { img.src = fallbackAvatar(company.name); };
-  card.appendChild(img);
+  card.appendChild(buildCardMedia(company));
   card.appendChild(buildCardBody(company));
+  const moreToggle = el('div', { class: 'swipe-card__more-toggle' });
+  moreToggle.innerHTML = MORE_TOGGLE_ICON;
+  card.appendChild(moreToggle);
   card.appendChild(el('div', { class: 'swipe-badge swipe-badge--like', text: 'Интересно' }));
   card.appendChild(el('div', { class: 'swipe-badge swipe-badge--nope', text: 'Мимо' }));
   if (collapsedByDefault) {
