@@ -166,7 +166,7 @@ input:focus, textarea:focus, select:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 14px;
   background: rgba(7, 11, 22, 0.9);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
@@ -531,7 +531,7 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ---------- Admin ---------- */
-.admin-shell { max-width: 980px; width: 100%; min-width: 0; margin: 0 auto; padding: 24px 18px 60px; }
+.admin-shell { max-width: 980px; width: 100%; min-width: 0; margin: 0 auto; padding: calc(24px + env(safe-area-inset-top, 0px)) 18px 60px; }
 .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
 .admin-header h1 { font-size: 20px; }
 
