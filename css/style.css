@@ -253,6 +253,10 @@ input:focus, textarea:focus, select:focus {
   flex-direction: column;
   padding: 14px 16px 16px;
   overflow: hidden;
+  transition: height 0.25s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  #view-feed.is-active { transition: none; }
 }
 
 /* ---------- Swipe feed ---------- */

@@ -35,7 +35,10 @@ function syncLayoutHeights() {
 syncLayoutHeights();
 window.addEventListener('resize', syncLayoutHeights);
 window.addEventListener('orientationchange', syncLayoutHeights);
-if (document.fonts?.ready) document.fonts.ready.then(syncLayoutHeights);
+// Раньше здесь был ещё и пересчёт после document.fonts.ready — но
+// эффект от него (шапка чуть меняет высоту, когда догружается шрифт
+// логотипа) настолько маленький, что не стоил заметного рывка ленты
+// от резкого пересчёта её размера уже после первого показа карточки.
 
 /* ---------------------------- Tabs ---------------------------- */
 const tabbar = document.getElementById('tabbar');
