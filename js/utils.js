@@ -35,26 +35,40 @@ export function generateUsernameFromName(name, maxLength = 18) {
   return translit.slice(0, maxLength) || 'company';
 }
 
-function csvEscapeField(value) {
+// Разделитель — точка с запятой, а не запятая: у Excel с русской
+// (и вообще большинства европейских) региональных настроек запятая —
+// это десятичный разделитель, поэтому CSV с запятыми при открытии
+// двойным кликом Excel сваливает всё в один столбец, не разбивая его.
+const CSV_DELIMITER = ';';
+
+function csvEscapeField(value, delimiter = CSV_DELIMITER) {
   const s = String(value ?? '');
-  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
+  const needsQuotes = new RegExp(`["\n\r]|\\${delimiter}`).test(s);
+  return needsQuotes ? `"${s.replace(/"/g, '""')}"` : s;
 }
 
 export function rowsToCSV(rows) {
-  return rows.map((row) => row.map(csvEscapeField).join(',')).join('\r\n');
+  return rows.map((row) => row.map((v) => csvEscapeField(v)).join(CSV_DELIMITER)).join('\r\n');
 }
 
 // Простой, но корректный разбор CSV (в духе RFC 4180): понимает поля в
-// кавычках с запятыми/переносами строк внутри и удвоенные кавычки как
-// экранирование — этого достаточно для файлов, которые выгружает и
-// открывает Excel/Google Таблицы.
+// кавычках с разделителем/переносами строк внутри и удвоенные кавычки
+// как экранирование — этого достаточно для файлов из Excel/Google
+// Таблиц. Разделитель определяется по первой строке файла (считаем,
+// каких символов — «;» или «,» — в ней больше вне кавычек), чтобы
+// одинаково понимать и наши файлы (";"), и файлы, сохранённые где-то
+// с запятой.
 export function parseCSV(text) {
+  const src = text.replace(/^﻿/, '');
+  const firstLine = src.split(/\r\n|\n|\r/, 1)[0] || '';
+  const semicolons = (firstLine.match(/;/g) || []).length;
+  const commas = (firstLine.match(/,/g) || []).length;
+  const delimiter = semicolons >= commas ? ';' : ',';
+
   const rows = [];
   let row = [];
   let field = '';
   let inQuotes = false;
-  const src = text.replace(/^﻿/, '');
 
   for (let i = 0; i < src.length; i++) {
     const ch = src[i];
@@ -66,7 +80,7 @@ export function parseCSV(text) {
       }
     } else if (ch === '"') {
       inQuotes = true;
-    } else if (ch === ',') {
+    } else if (ch === delimiter) {
       row.push(field);
       field = '';
     } else if (ch === '\n' || ch === '\r') {
