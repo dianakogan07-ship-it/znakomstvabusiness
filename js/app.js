@@ -170,8 +170,7 @@ function renderFeedStack() {
     const card = buildCardEl(company);
     card.style.zIndex = String(i + 1);
     if (!isTop) {
-      card.style.transform = 'scale(0.96) translateY(8px)';
-      card.style.pointerEvents = 'none';
+      card.classList.add('swipe-card--peek');
     }
     feedStack.appendChild(card);
     if (isTop) {
@@ -184,6 +183,11 @@ function renderFeedStack() {
 
 async function handleFeedDecision(company, direction) {
   feedQueue = feedQueue.filter((c) => c.id !== company.id);
+  // Карточка позади уже сидит на экране чуть уменьшенной (эффект стопки).
+  // Плавно "выпускаем" её до полного размера прямо сейчас, пока верхняя
+  // улетает — а не ждём переотрисовки всей стопки, которая иначе просто
+  // создаёт новую карточку сразу в полный размер, без анимации роста.
+  feedStack.querySelector('.swipe-card--peek')?.classList.remove('swipe-card--peek');
   setTimeout(renderFeedStack, 420);
   try {
     const isMatch = await call('record_swipe', { p_token: session.token, p_to_company_id: company.id, p_direction: direction });
