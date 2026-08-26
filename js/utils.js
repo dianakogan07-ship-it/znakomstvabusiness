@@ -35,6 +35,71 @@ export function generateUsernameFromName(name, maxLength = 18) {
   return translit.slice(0, maxLength) || 'company';
 }
 
+function csvEscapeField(value) {
+  const s = String(value ?? '');
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+export function rowsToCSV(rows) {
+  return rows.map((row) => row.map(csvEscapeField).join(',')).join('\r\n');
+}
+
+// Простой, но корректный разбор CSV (в духе RFC 4180): понимает поля в
+// кавычках с запятыми/переносами строк внутри и удвоенные кавычки как
+// экранирование — этого достаточно для файлов, которые выгружает и
+// открывает Excel/Google Таблицы.
+export function parseCSV(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  const src = text.replace(/^﻿/, '');
+
+  for (let i = 0; i < src.length; i++) {
+    const ch = src[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (src[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+      } else {
+        field += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      row.push(field);
+      field = '';
+    } else if (ch === '\n' || ch === '\r') {
+      if (ch === '\r' && src[i + 1] === '\n') i++;
+      row.push(field);
+      field = '';
+      rows.push(row);
+      row = [];
+    } else {
+      field += ch;
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows.filter((r) => r.some((cell) => cell.trim() !== ''));
+}
+
+export function downloadTextFile(filename, content, mime = 'text/plain;charset=utf-8;') {
+  // BOM в начале — иначе Excel на Windows иногда показывает кириллицу
+  // из UTF-8 CSV набором нечитаемых символов.
+  const blob = new Blob(['﻿' + content], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export async function copyToClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);

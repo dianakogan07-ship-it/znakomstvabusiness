@@ -46,13 +46,24 @@
         </div>
         <h1>Компании-участники</h1>
       </div>
-      <div style="display:flex; gap:10px;">
+      <div style="display:flex; gap:10px; flex-wrap:wrap;">
         <button class="btn" id="adminLogoutBtn">Выйти</button>
         <button class="btn btn--primary" id="openAddFormBtn">+ Добавить компанию</button>
       </div>
     </div>
 
+    <div class="admin-toolbar">
+      <input type="search" id="companySearch" class="admin-toolbar__search" placeholder="Поиск по названию, сфере, контакту, логину…" />
+      <div class="admin-toolbar__actions">
+        <button class="btn btn--sm" id="downloadTemplateBtn">Скачать шаблон</button>
+        <button class="btn btn--sm" id="uploadTemplateBtn">Загрузить шаблон</button>
+        <input type="file" id="uploadTemplateInput" accept=".csv" hidden />
+        <button class="btn btn--sm" id="regenAllPasswordsBtn">Сгенерировать пароли всем</button>
+      </div>
+    </div>
+
     <div id="newCredentialsPanel"></div>
+    <div id="bulkResultPanel"></div>
 
     <div class="admin-table-wrap card-surface" style="padding: 6px;">
       <table class="admin-table">

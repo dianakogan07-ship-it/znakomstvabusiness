@@ -507,9 +507,27 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* ---------- Admin ---------- */
-.admin-shell { max-width: 980px; margin: 0 auto; padding: 24px 18px 60px; }
+.admin-shell { max-width: 980px; width: 100%; min-width: 0; margin: 0 auto; padding: 24px 18px 60px; }
 .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; flex-wrap: wrap; gap: 10px; }
 .admin-header h1 { font-size: 20px; }
+
+.admin-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+.admin-toolbar__search { max-width: 340px; flex: 1 1 220px; min-width: 0; }
+.admin-toolbar__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.import-summary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 20px;
+  font-size: 13.5px;
+}
+.import-summary h3 { font-size: 14px; margin-bottom: 8px; }
+.import-summary ul { margin: 8px 0 0; padding-left: 18px; color: var(--text-dim); }
+.import-summary li { margin-bottom: 3px; }
+.import-summary .import-summary__errors { color: var(--danger); }
+
 .admin-table-wrap { overflow-x: auto; }
 table.admin-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.admin-table th {

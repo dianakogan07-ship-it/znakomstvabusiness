@@ -1,5 +1,8 @@
 import { call, ApiError } from './supabase-client.js';
-import { saveAdminSession, getAdminSession, clearAdminSession, copyToClipboard, showToast, el, generatePassword, generateUsernameFromName, fallbackAvatar } from './utils.js';
+import {
+  saveAdminSession, getAdminSession, clearAdminSession, copyToClipboard, showToast, el,
+  generatePassword, generateUsernameFromName, fallbackAvatar, rowsToCSV, parseCSV, downloadTextFile,
+} from './utils.js';
 
 const loginScreen = document.getElementById('adminLoginScreen');
 const panel = document.getElementById('adminPanel');
@@ -52,6 +55,7 @@ function handleAuthError(err) {
 
 /* ---------------------------- Companies table ---------------------------- */
 const tableBody = document.getElementById('companiesTableBody');
+const searchInput = document.getElementById('companySearch');
 let companiesCache = [];
 
 async function loadCompanies() {
@@ -67,15 +71,31 @@ async function loadCompanies() {
   renderTable();
 }
 
+function getFilteredCompanies() {
+  const q = searchInput.value.trim().toLowerCase();
+  if (!q) return companiesCache;
+  return companiesCache.filter((c) => [c.name, c.industry, c.contact_first_name, c.username]
+    .some((field) => (field || '').toLowerCase().includes(q)));
+}
+
+searchInput.addEventListener('input', renderTable);
+
 function renderTable() {
   tableBody.innerHTML = '';
+  const list = getFilteredCompanies();
   if (companiesCache.length === 0) {
     tableBody.appendChild(el('tr', {}, [el('td', { colspan: '5' }, [
       el('div', { class: 'empty-state', text: 'Пока нет ни одной компании — добавьте первую' }),
     ])]));
     return;
   }
-  companiesCache.forEach((c) => {
+  if (list.length === 0) {
+    tableBody.appendChild(el('tr', {}, [el('td', { colspan: '5' }, [
+      el('div', { class: 'empty-state', text: 'Ничего не найдено по этому запросу' }),
+    ])]));
+    return;
+  }
+  list.forEach((c) => {
     const row = el('tr', {}, [
       el('td', {}, [el('div', { style: 'display:flex; align-items:center; gap:10px;' }, [
         el('img', { src: c.photo_url || fallbackAvatar(c.name), alt: '', style: 'width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;' }),
@@ -272,6 +292,164 @@ function showCredentialsPanel(cred) {
     ]),
   ]));
 }
+
+/* ---------------------------- Шаблон: скачать / загрузить, массовая генерация паролей ---------------------------- */
+const TEMPLATE_HEADERS = [
+  'Название компании', 'Ссылка на фото (URL)', 'Сфера деятельности',
+  'Имя контактного лица', 'Чем занимается', 'Что предлагает',
+  'Что интересно обсудить', 'Логин (необязательно)',
+];
+const FIELD_MAX = 110;
+
+document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+  downloadTextFile('shablon-kompaniy.csv', rowsToCSV([TEMPLATE_HEADERS]), 'text/csv;charset=utf-8;');
+});
+
+document.getElementById('uploadTemplateBtn').addEventListener('click', () => {
+  document.getElementById('uploadTemplateInput').click();
+});
+
+document.getElementById('uploadTemplateInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  await importTemplate(await file.text());
+});
+
+function renderBulkResult({ title, created = [], failed = [] }) {
+  const panel = document.getElementById('bulkResultPanel');
+  panel.innerHTML = '';
+  const box = el('div', { class: 'import-summary' }, [
+    el('h3', { text: title }),
+    el('div', { text: `Успешно: ${created.length}${failed.length ? `, не удалось: ${failed.length}` : ''}` }),
+  ]);
+  if (failed.length) {
+    const list = el('ul', { class: 'import-summary__errors' });
+    failed.forEach((f) => list.appendChild(el('li', { text: `${f.name}: ${f.reason}` })));
+    box.appendChild(list);
+  }
+  if (created.length) {
+    box.appendChild(el('button', {
+      class: 'btn btn--sm btn--primary', text: 'Скачать доступы (логин + пароль)', style: 'margin-top:10px;',
+      onClick: () => {
+        const rows = [['Компания', 'Логин', 'Пароль'], ...created.map((c) => [c.name, c.username, c.password])];
+        downloadTextFile('dostupy-kompaniy.csv', rowsToCSV(rows), 'text/csv;charset=utf-8;');
+      },
+    }));
+  }
+  box.appendChild(el('button', {
+    class: 'btn btn--sm', text: 'Скрыть', style: 'margin-top:10px; margin-left:8px;',
+    onClick: () => { panel.innerHTML = ''; },
+  }));
+  panel.appendChild(box);
+}
+
+async function importTemplate(text) {
+  const rows = parseCSV(text);
+  const dataRows = rows.slice(1).filter((r) => (r[0] || '').trim());
+  if (dataRows.length === 0) {
+    showToast('В файле нет ни одной заполненной строки с компанией (первая строка — заголовки)', 'error');
+    return;
+  }
+
+  const uploadBtn = document.getElementById('uploadTemplateBtn');
+  const originalText = uploadBtn.textContent;
+  const created = [];
+  const failed = [];
+  const usedUsernames = new Set(companiesCache.map((c) => c.username));
+
+  for (let i = 0; i < dataRows.length; i++) {
+    uploadBtn.disabled = true;
+    uploadBtn.textContent = `Загружаем ${i + 1} из ${dataRows.length}…`;
+    const [name, photoUrl, industry, contact, description, offer, discussTopics, usernameCol] = dataRows[i];
+    const companyLabel = (name || '').trim() || `Строка ${i + 2}`;
+
+    if (!name || !name.trim()) {
+      failed.push({ name: companyLabel, reason: 'Не указано название компании' });
+      continue;
+    }
+
+    let username = (usernameCol || '').trim() || generateUsernameFromName(name);
+    if (usedUsernames.has(username)) {
+      username = `${username}${Math.floor(10 + Math.random() * 89)}`;
+    }
+    const password = generatePassword();
+
+    const fields = {
+      p_name: name.trim(),
+      p_photo_url: (photoUrl || '').trim() || null,
+      p_industry: (industry || '').trim() || null,
+      p_description: (description || '').trim().slice(0, FIELD_MAX) || null,
+      p_offer: (offer || '').trim().slice(0, FIELD_MAX) || null,
+      p_discuss_topics: (discussTopics || '').trim().slice(0, FIELD_MAX) || null,
+      p_contact_first_name: (contact || '').trim() || null,
+      p_username: username,
+    };
+
+    try {
+      const result = await call('admin_create_company', { p_admin_token: getAdminSession(), ...fields, p_password: password });
+      const row = result?.[0];
+      usedUsernames.add(username);
+      created.push({ name: fields.p_name, username: row?.username || username, password });
+    } catch (err) {
+      if (handleAuthError(err)) return;
+      failed.push({ name: companyLabel, reason: err instanceof ApiError ? err.message : 'Не удалось сохранить' });
+    }
+  }
+
+  uploadBtn.disabled = false;
+  uploadBtn.textContent = originalText;
+  await loadCompanies();
+  renderBulkResult({ title: '📥 Загрузка шаблона завершена', created, failed });
+}
+
+document.getElementById('regenAllPasswordsBtn').addEventListener('click', async () => {
+  if (companiesCache.length === 0) {
+    showToast('Список компаний пуст', 'error');
+    return;
+  }
+  const ok = confirm(
+    `Сгенерировать новые пароли для всех компаний (${companiesCache.length})?\n\n` +
+    'Старые пароли перестанут работать сразу же — участникам нужно будет передать новые.'
+  );
+  if (!ok) return;
+
+  const btn = document.getElementById('regenAllPasswordsBtn');
+  const originalText = btn.textContent;
+  const created = [];
+  const failed = [];
+
+  for (let i = 0; i < companiesCache.length; i++) {
+    const c = companiesCache[i];
+    btn.disabled = true;
+    btn.textContent = `Обрабатываем ${i + 1} из ${companiesCache.length}…`;
+    const password = generatePassword();
+    try {
+      await call('admin_update_company', {
+        p_admin_token: getAdminSession(),
+        p_company_id: c.id,
+        p_name: c.name,
+        p_photo_url: c.photo_url,
+        p_industry: c.industry,
+        p_description: c.description,
+        p_offer: c.offer,
+        p_discuss_topics: c.discuss_topics,
+        p_contact_first_name: c.contact_first_name,
+        p_username: c.username,
+        p_new_password: password,
+      });
+      created.push({ name: c.name, username: c.username, password });
+    } catch (err) {
+      if (handleAuthError(err)) return;
+      failed.push({ name: c.name, reason: err instanceof ApiError ? err.message : 'Не удалось обновить' });
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = originalText;
+  await loadCompanies();
+  renderBulkResult({ title: '🔑 Пароли обновлены для всех компаний', created, failed });
+});
 
 /* ---------------------------- Init ---------------------------- */
 if (getAdminSession()) {
