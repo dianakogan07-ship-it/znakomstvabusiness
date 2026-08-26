@@ -168,12 +168,29 @@ function openForm(company = null) {
   formTitle.textContent = company ? 'Изменить компанию' : 'Добавить компанию';
   passwordHint.textContent = company ? '(оставьте пустым, чтобы не менять)' : '';
   document.getElementById('f_password').required = !company;
+  ['f_description', 'f_offer', 'f_discuss_topics'].forEach(updateCharCounter);
   formModal.classList.add('is-open');
 }
 
 function closeForm() {
   formModal.classList.remove('is-open');
 }
+
+// Ограничение длины полей карточки не просто для порядка: попап с полной
+// информацией собран без прокрутки под конкретный размер текста — слишком
+// длинное описание вылезет за пределы экрана на маленьких телефонах.
+function updateCharCounter(fieldId) {
+  const field = document.getElementById(fieldId);
+  const counter = document.getElementById(`count_${fieldId.replace('f_', '')}`);
+  if (!field || !counter) return;
+  const max = Number(field.getAttribute('maxlength')) || 0;
+  const len = field.value.length;
+  counter.textContent = `${len} / ${max}`;
+  counter.classList.toggle('is-near-limit', len >= max);
+}
+['f_description', 'f_offer', 'f_discuss_topics'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', () => updateCharCounter(id));
+});
 
 document.getElementById('openAddFormBtn').addEventListener('click', () => openForm());
 document.getElementById('cancelFormBtn').addEventListener('click', closeForm);

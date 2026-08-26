@@ -141,7 +141,9 @@ input:focus, textarea:focus, select:focus {
 .admin-header .event-logo { margin-bottom: 4px; }
 .auth-box .sub { color: var(--text-dim); font-size: 14px; margin-bottom: 26px; }
 .field { margin-bottom: 14px; }
-.field label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+.field label { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; color: var(--text-dim); margin-bottom: 6px; }
+.char-counter { font-size: 11px; color: var(--text-faint); font-variant-numeric: tabular-nums; flex-shrink: 0; }
+.char-counter.is-near-limit { color: var(--warn, #c98a34); }
 .auth-error {
   background: rgba(239, 91, 91, 0.12);
   border: 1px solid rgba(239, 91, 91, 0.35);
@@ -319,7 +321,9 @@ input:focus, textarea:focus, select:focus {
    stack: sizes to its own content (single scroll region = the modal
    sheet) instead of filling a fixed-height absolutely-positioned box. */
 .swipe-card--static { position: relative; inset: auto; height: auto; cursor: default; touch-action: auto; }
-.swipe-card--static .swipe-card__media { flex: none; height: 190px; }
+.swipe-card--static .swipe-card__media { flex: none; height: 130px; }
+.swipe-card--static .swipe-card__section { margin-bottom: 9px; }
+.swipe-card--static .swipe-card__body { padding: 12px 16px; }
 .swipe-card--static .swipe-card__body { overflow-y: visible; flex: none; }
 .swipe-card__section { margin-bottom: 12px; }
 .swipe-card__section:last-child { margin-bottom: 0; }
@@ -473,6 +477,7 @@ input:focus, textarea:focus, select:focus {
 }
 .modal-overlay.is-open { opacity: 1; pointer-events: auto; }
 .modal-sheet {
+  position: relative;
   width: 100%; max-width: 400px;
   background: var(--surface);
   border-radius: var(--radius-lg);
@@ -482,6 +487,20 @@ input:focus, textarea:focus, select:focus {
   opacity: 0;
   transition: transform 0.2s ease, opacity 0.2s ease;
 }
+.modal-close-btn {
+  position: absolute;
+  top: 14px; right: 14px;
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+}
+.modal-close-btn:hover { color: var(--text); }
+.modal-close-btn svg { width: 15px; height: 15px; }
 .modal-overlay.is-open .modal-sheet { transform: scale(1); opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .modal-sheet { transition: opacity 0.2s ease; transform: none; }

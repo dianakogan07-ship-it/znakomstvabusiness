@@ -123,10 +123,10 @@ function buildCardEl(company, { collapsedByDefault = true } = {}) {
 
 function openInfoModal(company) {
   cardModalContent.innerHTML = '';
+  addModalCloseButton();
   const card = buildCardEl(company, { collapsedByDefault: false });
   card.classList.add('swipe-card--static');
   cardModalContent.appendChild(card);
-  cardModalContent.appendChild(el('button', { class: 'btn btn--block', text: 'Закрыть', onClick: closeCardModal, style: 'margin-top: 16px;' }));
   cardModal.classList.add('is-open');
 }
 
@@ -277,8 +277,15 @@ cardModal.addEventListener('click', (e) => {
   if (e.target === cardModal) closeCardModal();
 });
 
+function addModalCloseButton() {
+  const btn = el('button', { class: 'modal-close-btn', onClick: closeCardModal, 'aria-label': 'Закрыть' });
+  btn.innerHTML = '<svg viewBox="0 0 20 20" fill="none"><path d="M5 5l10 10M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+  cardModalContent.appendChild(btn);
+}
+
 function openInvitationCard(row) {
   cardModalContent.innerHTML = '';
+  addModalCloseButton();
   const company = { ...row, id: row.company_id };
   const card = buildCardEl(company, { collapsedByDefault: false });
   card.classList.add('swipe-card--static');
