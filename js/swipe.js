@@ -7,6 +7,8 @@ export function makeSwipeable(cardEl, { onDecide, threshold = 100 } = {}) {
   let dy = 0;
   let dragging = false;
   let pointerId = null;
+  let dragMoved = false;
+  const CLICK_SUPPRESS_DISTANCE = 6;
 
   function setTransform(x, y, animate = false) {
     cardEl.style.transition = animate ? 'transform 0.35s ease, opacity 0.35s ease' : 'none';
@@ -27,6 +29,7 @@ export function makeSwipeable(cardEl, { onDecide, threshold = 100 } = {}) {
   function onPointerDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
     dragging = true;
+    dragMoved = false;
     pointerId = e.pointerId;
     cardEl.setPointerCapture?.(pointerId);
     startX = e.clientX;
@@ -38,7 +41,21 @@ export function makeSwipeable(cardEl, { onDecide, threshold = 100 } = {}) {
     if (!dragging || e.pointerId !== pointerId) return;
     dx = e.clientX - startX;
     dy = e.clientY - startY;
+    if (Math.abs(dx) > CLICK_SUPPRESS_DISTANCE || Math.abs(dy) > CLICK_SUPPRESS_DISTANCE) {
+      dragMoved = true;
+    }
     setTransform(dx, dy);
+  }
+
+  // Мышь (а иногда и тач) после отпускания кнопки в конце перетаскивания
+  // всё равно шлёт обычный click — без этой проверки свайп карточки
+  // попутно ещё и открывал попап "подробнее", будто что-то "дёргалось".
+  function onClickCapture(e) {
+    if (dragMoved) {
+      e.stopPropagation();
+      e.preventDefault();
+      dragMoved = false;
+    }
   }
 
   function finishDrag() {
@@ -69,6 +86,7 @@ export function makeSwipeable(cardEl, { onDecide, threshold = 100 } = {}) {
   cardEl.addEventListener('pointermove', onPointerMove);
   cardEl.addEventListener('pointerup', onPointerUp);
   cardEl.addEventListener('pointercancel', onPointerUp);
+  cardEl.addEventListener('click', onClickCapture, { capture: true });
 
   return {
     programmaticDecide(direction) {
@@ -81,6 +99,7 @@ export function makeSwipeable(cardEl, { onDecide, threshold = 100 } = {}) {
       cardEl.removeEventListener('pointermove', onPointerMove);
       cardEl.removeEventListener('pointerup', onPointerUp);
       cardEl.removeEventListener('pointercancel', onPointerUp);
+      cardEl.removeEventListener('click', onClickCapture, { capture: true });
     },
   };
 }
